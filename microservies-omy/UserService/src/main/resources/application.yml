@@ -1,0 +1,96 @@
+server:
+  port: 8081
+
+spring:
+  application:
+    name: user-service
+  datasource:
+    url: jdbc:mysql://localhost:3306/rating_System
+    username: omy
+    password: Passcode_core05101988
+    driver-class-name: com.mysql.cj.jdbc.Driver
+  jpa:
+    hibernate:
+      ddl-auto: update
+    show-sql: true
+    properties:
+      hibernate:
+        dialect: org.hibernate.dialect.MySQL8Dialect
+  config:
+    import: "optional:configserver:http://localhost:8085"
+  profiles:
+    active: default
+
+# Active circuit breaker configurations
+management:
+  health:
+    circuit-breakers:
+      enabled: true
+  endpoints:
+    web:
+      exposure:
+        include: health
+  endpoint:
+    health:
+      show-details: always
+
+
+
+# Eureka client properties (currently commented out)
+# eureka:
+#   client:
+#     fetch-registry: true
+#     register-with-eureka: true
+#     service-url:
+#       defaultZone: http://localhost:8080/eureka/
+#   instance:
+#     prefer-ip-address: true
+resilience4j:
+  circuitbreaker:
+    instances:
+      ratingHotelBreaker:
+        register-health-indicator: true
+        event-consumer-buffer-size: 10
+        failure-rate-threshold: 50
+        minimum-number-of-calls: 5
+        automatic-transition-from-open-to-half-open-enabled: true
+        wait-duration-in-open-state:
+          seconds: 6s
+        permitted-number-of-calls-in-half-open-state: 3
+        sliding-window-size: 10
+        sliding-window-type: COUNT_BASED
+
+  retry:
+    instances:
+      ratingHotelBreaker:
+        max-attempts: 5
+        wait-duration:
+          nanos: 5000
+
+  ratelimiter:
+    instances:
+      userRateLimiter:
+        limit-refresh-period: 4s
+        timeout-duration: 2s
+        limit-for-period: 2
+
+
+
+#1. register-health-indicator: true
+#Purpose: This enables the integration with Spring Boot's health check mechanism. When set to true, the health of the Circuit Breaker will be exposed through the /actuator/health endpoint, which provides information about the status (open, closed, half-open) of the Circuit Breaker.
+#2. event-consumer-buffer-size: 10
+#Purpose: This configures the buffer size for storing Circuit Breaker events, such as failure or success events. The buffer can store up to 10 events at a time before older events get overwritten. This allows for keeping track of the most recent state changes in the Circuit Breaker.
+#3. failure-rate-threshold: 50
+#Purpose: This defines the failure rate threshold percentage at which the Circuit Breaker will transition from CLOSED to OPEN. In this case, if more than 50% of the calls fail within the configured window, the Circuit Breaker will OPEN, preventing further calls to the external service.
+#4. minimum-number-of-calls: 5
+#Purpose: This specifies the minimum number of calls that must be made before the Circuit Breaker evaluates whether the failure rate has exceeded the threshold. In this case, the Circuit Breaker will only start calculating the failure rate after at least 5 calls have been made.
+#5. automatic-transition-from-open-to-half-open-enabled: true
+#Purpose: This enables automatic transition from the OPEN state to the HALF-OPEN state after a certain time (defined in wait-duration-in-open-state). When the Circuit Breaker is in HALF-OPEN, it will allow a limited number of test calls to check if the external service has recovered.
+#6. wait-duration-in-open-state: 6s
+#Purpose: This defines the time duration the Circuit Breaker will remain in the OPEN state before transitioning to the HALF-OPEN state. Here, the Circuit Breaker will stay open for 6 seconds before testing the service again in the HALF-OPEN state.
+#7. permitted-number-of-calls-in-half-open-state: 3
+#Purpose: This sets the number of calls allowed when the Circuit Breaker is in the HALF-OPEN state. In this case, 3 calls will be permitted to check whether the external service is healthy again. If the calls succeed, the Circuit Breaker will close (return to the CLOSED state).
+#8. sliding-window-size: 10
+#Purpose: This defines the size of the sliding window, which is used to calculate the failure rate. The window size is set to 10, meaning the failure rate will be calculated based on the most recent 10 calls (or the last 10 seconds, depending on the window type).
+#9. sliding-window-type: COUNT_BASED
+#Purpose: This configures the type of sliding window. The value COUNT_BASED means that the Circuit Breaker will calculate the failure rate based on the number of calls rather than the time period. In this case, it will look at the last 10 calls (as per sliding-window-size) to determine whether the failure rate threshold has been exceeded.

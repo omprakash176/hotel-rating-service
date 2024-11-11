@@ -1,0 +1,6 @@
+package com.user.servies.UserService.com.user.servies.repository;
+
+import com.user.servies.UserService.com.user.entities.User;
+
+public interface UserRepositor extends JpaRepository<User,String > {
+}

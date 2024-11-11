@@ -1,0 +1,19 @@
+# Spring application name
+spring.application.name=userServices
+server.port=8081
+# DataSource configuration for connecting to the MySQL database
+spring.datasource.url=jdbc:mysql://localhost:3306/rating_System
+spring.datasource.username=root
+spring.datasource.password=Passcode_core05101988
+spring.datasource.driver-class-name=com.mysql.cj.jdbc.Driver
+
+# JPA configuration
+spring.jpa.hibernate.ddl-auto=update
+spring.jpa.show-sql=true
+spring.jpa.properties.hibernate.dialect=org.hibernate.dialect.MySQL8Dialect
+
+# Eureka client configuration
+eureka.client.fetch-registry=true
+eureka.client.register-with-eureka=true
+eureka.client.service-url.defaultZone=http://localhost:8080/eureka/
+eureka.instance.prefer-ip-address=true

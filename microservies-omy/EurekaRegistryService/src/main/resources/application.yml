@@ -1,0 +1,16 @@
+server:
+  port: 8080
+#Eureka Server Configuration which register it as server
+eureka:
+  instance:
+#Eureka Server Environment
+    hostname: localhost
+
+# prevent it to make itself as Client service because it registers itself as server
+  client:
+    register-with-eureka: false
+    fetch-registry: false
+
+spring:
+  application:
+    name: EurekaRegistryService
